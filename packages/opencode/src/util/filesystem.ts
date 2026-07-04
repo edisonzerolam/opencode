@@ -122,6 +122,11 @@ export function normalizePath(p: string): string {
   }
 }
 
+export function normalizeInternalPath(p: string): string {
+  if (process.platform !== "win32") return p
+  return p.replace(/\\/g, "/")
+}
+
 export function normalizePathPattern(p: string): string {
   if (process.platform !== "win32") return p
   if (p === "*") return p
