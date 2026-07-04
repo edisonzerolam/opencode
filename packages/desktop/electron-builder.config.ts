@@ -86,8 +86,9 @@ const getBase = (appId: string): Configuration => ({
     verifyUpdateCodeSignature: false,
   },
   nsis: {
-    oneClick: true,
-    perMachine: false,
+    oneClick: false,
+    perMachine: true,
+    allowToChangeInstallationDirectory: true,
     installerIcon: `resources/icons/icon.ico`,
     installerHeaderIcon: `resources/icons/icon.ico`,
   },
