@@ -288,7 +288,8 @@ export function Autocomplete(props: {
   })
 
   function normalizeMentionPath(filePath: string) {
-    const baseDir = location()?.directory || sync.path.directory || paths.cwd
+    const rawBase = location()?.directory || sync.path.directory || paths.cwd
+    const baseDir = rawBase.replace(/[\\/]+$/, "").replace(/\\/g, "/")
     const absolute = path.resolve(filePath)
     const relative = path.relative(baseDir, absolute)
 
