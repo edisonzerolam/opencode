@@ -335,6 +335,19 @@ const parser = lazy(async () => {
   return { bash, ps }
 })
 
+function sanitizeCommand(command: string): string {
+  if (process.platform !== "win32") return command
+
+  const stopProcessPattern = /Stop-Process\s+-Name\s+node\s+/i
+  if (stopProcessPattern.test(command)) {
+    return command.replace(
+      stopProcessPattern,
+      `Get-Process -Name node | Where-Object { $_.Id -ne ${process.pid} } | Stop-Process `,
+    )
+  }
+  return command
+}
+
 export const ShellTool = Tool.define(
   ShellID.ToolID,
   Effect.gen(function* () {
@@ -628,10 +641,11 @@ export const ShellTool = Tool.define(
                 }),
               )
 
+              const command = sanitizeCommand(params.command)
               return yield* run(
                 {
                   shell,
-                  command: params.command,
+                  command,
                   cwd,
                   env: yield* shellEnv(ctx, cwd),
                   timeout,
