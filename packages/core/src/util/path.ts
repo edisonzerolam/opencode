@@ -1,3 +1,23 @@
+const IS_WIN32 = process.platform === "win32"
+
+export function normalize(p: string): string {
+  if (!IS_WIN32) return p
+  return p.replace(/\\/g, "/").replace(/^([a-z]):/, (_, d) => `${d.toUpperCase()}:`)
+}
+
+export function equals(a: string, b: string): boolean {
+  const na = normalize(a)
+  const nb = normalize(b)
+  if (IS_WIN32) return na.toLowerCase() === nb.toLowerCase()
+  return na === nb
+}
+
+export function contains(parent: string, child: string): boolean {
+  const np = normalize(parent).replace(/\/$/, "")
+  const nc = normalize(child)
+  return nc.startsWith(np + "/") || nc === np
+}
+
 export function getFilename(path: string | undefined) {
   if (!path) return ""
   const trimmed = path.replace(/[/\\]+$/, "")
