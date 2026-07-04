@@ -31,7 +31,8 @@ export function setupAutoUpdater(stop: () => Promise<void>) {
     backend: {
       checkForUpdates: () => autoUpdater.checkForUpdates(),
       downloadUpdate: () => autoUpdater.downloadUpdate(),
-      quitAndInstall: () => {
+      quitAndInstall: async () => {
+        await gracefulShutdownCliProcesses()
         // quitAndInstall closes all windows before emitting before-quit, so
         // flag the quit first to keep window ids persisted for restore.
         setAppQuitting()
@@ -82,4 +83,34 @@ export async function showUpdaterDialog(controller: ReturnType<typeof setupAutoU
     cancelId: 1,
   })
   if (response.response === 0) await controller.install()
+}
+
+async function gracefulShutdownCliProcesses() {
+  if (process.platform !== "win32") return
+
+  try {
+    const { execSync } = await import("child_process")
+    const selfPid = process.pid
+
+    const result = execSync(
+      `wmic process where "name='opencode.exe' and processId!=${selfPid}" get processId /format:csv`,
+      { encoding: "utf8", timeout: 5000 },
+    )
+
+    const pids = result
+      .split("\n")
+      .filter((line) => line.includes(","))
+      .map((line) => parseInt(line.split(",")[1], 10))
+      .filter((pid) => !isNaN(pid))
+
+    for (const pid of pids) {
+      try {
+        execSync(`taskkill /pid ${pid}`, { timeout: 3000 })
+      } catch {
+        execSync(`taskkill /f /pid ${pid}`, { timeout: 1000 })
+      }
+    }
+  } catch {
+    // Best-effort; continue with update even if this fails
+  }
 }

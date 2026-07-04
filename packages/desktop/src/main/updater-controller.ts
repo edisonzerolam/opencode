@@ -7,7 +7,7 @@ export type UpdaterReadyRecord = { version: string }
 export type UpdaterBackend = {
   checkForUpdates(): Promise<{ isUpdateAvailable?: boolean; updateInfo?: { version?: string } } | null | undefined>
   downloadUpdate(): Promise<unknown>
-  quitAndInstall(): void
+  quitAndInstall(): void | Promise<void>
 }
 
 type UpdaterPersistence = {
