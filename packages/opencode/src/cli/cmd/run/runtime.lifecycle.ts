@@ -93,6 +93,14 @@ function shutdown(renderer: CliRenderer): void {
     return
   }
 
+  // Windows: restore terminal state before destroying renderer
+  if (process.platform === "win32") {
+    try {
+      process.stdout.write("\x1b[?1000l\x1b[?1002l\x1b[?1003l\x1b[?1006l")
+      process.stdout.write("\x1b[?25h")
+    } catch {}
+  }
+
   if (renderer.externalOutputMode === "capture-stdout") {
     renderer.externalOutputMode = "passthrough"
   }
@@ -279,6 +287,11 @@ export async function createRuntimeLifecycle(input: LifecycleInput): Promise<Lif
     })
 
     const sigint = () => {
+      if (process.platform === "win32") {
+        try {
+          process.stdout.write(`\x1b]0;OC | ${input.sessionID || "opencode"}\x07`)
+        } catch {}
+      }
       footer.requestExit()
     }
 
@@ -343,6 +356,10 @@ export async function createRuntimeLifecycle(input: LifecycleInput): Promise<Lif
         footer.destroy()
         unregisterKeymap?.()
         shutdown(renderer)
+        if (process.platform === "win32") {
+          const title = next.sessionTitle || input.sessionID || "opencode"
+          process.stdout.write(`\x1b]0;OC | ${title}\x07`)
+        }
         if (!wroteExit) {
           process.stdout.write("\n")
         }
