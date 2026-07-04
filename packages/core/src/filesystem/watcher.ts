@@ -85,9 +85,12 @@ const layer = Layer.effect(
 
     const callback: ParcelWatcher.SubscribeCallback = (_error, updates) => {
       for (const update of updates) {
-        if (update.type === "create") runFork(events.publish(Event.Updated, { file: update.path, event: "add" }))
-        if (update.type === "update") runFork(events.publish(Event.Updated, { file: update.path, event: "change" }))
-        if (update.type === "delete") runFork(events.publish(Event.Updated, { file: update.path, event: "unlink" }))
+        const file = process.platform === "win32"
+          ? update.path.replace(/\\/g, "/")
+          : update.path
+        if (update.type === "create") runFork(events.publish(Event.Updated, { file, event: "add" }))
+        if (update.type === "update") runFork(events.publish(Event.Updated, { file, event: "change" }))
+        if (update.type === "delete") runFork(events.publish(Event.Updated, { file, event: "unlink" }))
       }
     }
 
